@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Interactive simulator for dynamic priority-based resource allocation using a priority queue, resource constraints, and fairness aging." />
+  <title>PriorityFlow | Resource Allocation Simulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">PF</div><div><strong>PriorityFlow</strong><span>Resource Lab</span></div></div>
+      <div class="side-label">WORKSPACE</div>
+      <a class="nav-item active" href="#overview"><span>▦</span> Overview</a>
+      <a class="nav-item" href="#task-manager"><span>☷</span> Task manager</a>
+      <a class="nav-item" href="#allocation-log"><span>↳</span> Allocation log</a>
+      <div class="sidebar-bottom"><div class="status-dot"></div><div><strong>Simulation ready</strong><small>Runs locally in your browser</small></div></div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar"><div><p class="eyebrow">COMPUTER SCIENCE · DATA STRUCTURES</p><h1>Dynamic Resource Allocation</h1><p class="subtitle">A priority-driven scheduler with resource awareness and fairness.</p></div><button id="resetBtn" class="button button-light">↻ Reset simulation</button></header>
+
+      <section class="metric-grid" aria-label="Simulation metrics">
+        <article class="metric-card"><div class="metric-top"><span>Total tasks</span><span class="metric-icon blue">☷</span></div><strong id="totalTasks">6</strong><small>Across all states</small></article>
+        <article class="metric-card"><div class="metric-top"><span>Completed</span><span class="metric-icon green">✓</span></div><strong id="completedTasks">0</strong><small>Finished successfully</small></article>
+        <article class="metric-card"><div class="metric-top"><span>CPU utilization</span><span class="metric-icon purple">◫</span></div><strong id="cpuUtil">0%</strong><div class="mini-track"><div id="cpuBar" class="mini-fill purple-fill"></div></div></article>
+        <article class="metric-card"><div class="metric-top"><span>Memory in use</span><span class="metric-icon orange">▤</span></div><strong id="memoryUtil">0 / 16 GB</strong><div class="mini-track"><div id="memoryBar" class="mini-fill orange-fill"></div></div></article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel resource-panel"><div class="panel-heading"><div><h2>Resource capacity</h2><p>Adjust the system's available resources.</p></div><span class="live-pill"><i></i> LIVE</span></div>
+          <div class="resource-control"><div class="resource-label"><span>CPU units</span><strong><span id="cpuCapacityLabel">8</span> units</strong></div><input id="cpuCapacity" type="range" min="2" max="16" value="8" /><div class="range-labels"><span>2 units</span><span>16 units</span></div></div>
+          <div class="resource-control"><div class="resource-label"><span>Memory capacity</span><strong><span id="memoryCapacityLabel">16</span> GB</strong></div><input id="memoryCapacity" type="range" min="4" max="64" step="4" value="16" /><div class="range-labels"><span>4 GB</span><span>64 GB</span></div></div>
+          <div class="resource-summary"><div><span class="summary-dot cpu-dot"></span><span>CPU allocated</span><strong id="cpuAllocated">0 / 8</strong></div><div><span class="summary-dot mem-dot"></span><span>Memory allocated</span><strong id="memoryAllocated">0 / 16 GB</strong></div></div>
+        </article>
+
+        <article class="panel scheduler-panel"><div class="panel-heading"><div><h2>Scheduler controls</h2><p>Run one scheduling cycle at a time.</p></div><span class="cycle-badge">Cycle <b id="cycleCount">0</b></span></div>
+          <div class="algorithm-box"><div class="algorithm-icon">⌘</div><div><strong>Priority queue + aging</strong><p>Higher effective priority runs first. Waiting tasks gain priority over time.</p></div></div>
+          <div class="scheduler-actions"><button id="runCycleBtn" class="button button-primary">▶ Run next cycle</button><button id="runAllBtn" class="button button-secondary">Run until blocked</button></div>
+          <p class="helper-text" id="schedulerMessage" role="status">Ready to schedule tasks. Add or adjust tasks, then run a cycle.</p>
+        </article>
+      </section>
+
+      <section class="panel tasks-panel" id="task-manager"><div class="panel-heading task-heading"><div><h2>Task queue</h2><p>Manage competing tasks and inspect their priorities.</p></div><button id="addTaskBtn" class="button button-primary">＋ Add task</button></div>
+        <div class="table-wrap"><table><thead><tr><th>TASK</th><th>BASE PRIORITY</th><th>EFFECTIVE</th><th>CPU</th><th>MEMORY</th><th>WAIT</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody id="taskTableBody"></tbody></table></div>
+        <div id="emptyState" class="empty-state hidden"><div>☷</div><strong>No tasks in the queue</strong><p>Add a task to start the simulation.</p></div>
+      </section>
+
+      <section class="panel log-panel" id="allocation-log"><div class="panel-heading"><div><h2>Allocation log</h2><p>Recent scheduler decisions and resource events.</p></div><button id="clearLogBtn" class="text-button">Clear log</button></div><div id="logList" class="log-list" aria-live="polite"></div></section>
+      <footer>PriorityFlow · Educational scheduling simulator · No data leaves your browser</footer>
+    </main>
+  </div>
+
+  <dialog id="taskDialog"><form id="taskForm" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">TASK CONFIGURATION</p><h2>Add a task</h2></div><button type="button" id="closeDialogBtn" class="close-button" aria-label="Close">×</button></div>
+    <label>Task name<input id="taskName" name="taskName" maxlength="36" placeholder="e.g. Image processing" required /></label>
+    <div class="form-row"><label>Base priority <span class="muted">(1–10)</span><input id="taskPriority" name="priority" type="number" min="1" max="10" value="5" required /></label><label>CPU units<input id="taskCpu" name="cpu" type="number" min="1" max="16" value="2" required /></label></div>
+    <div class="form-row"><label>Memory (GB)<input id="taskMemory" name="memory" type="number" min="1" max="64" value="2" required /></label><label>Work units<input id="taskWork" name="work" type="number" min="1" max="5" value="2" required /></label></div>
+    <p class="form-note">Work units determine how many successful allocations are needed to complete a task.</p><p id="formError" class="form-error" role="alert"></p><button class="button button-primary full-width" type="submit">Add to queue</button>
+  </form></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
